@@ -1,0 +1,7 @@
+function dis = getDistance(vector1, vector2)
+    length = size(vector1,1);
+    dis = 0;
+    for i = 1:length        
+        vector1(i,1) - 
+    end
+end

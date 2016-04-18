@@ -1,0 +1,43 @@
+###################################################################
+#                                                                 #
+#    Jointly Optimized Regressors for Image Super-resolution      #
+#                        (version 1.0)                            #
+#  	Dengxin Dai, Radu Timofte, Luc Van Gool	                  #
+#			   					  #
+#      Copyright (c) 2015, ETH Zurich.  All rights reserved.      # 
+###################################################################
+
+Please cite the following paper, if you end up using this code 
+ in your publication:
+
+@InProceedings{JOR:EG15,
+  author = {D. Dai and R. Timofte, and L. {Van Gool}},
+  title = {Jointly Optimized Regressors for Image Super-resolution},
+  booktitle = {Eurographs},
+  year = {2015},
+  keywords = {}
+}
+    
+############### JOR Code #######################
+
+1. This is a matlab code, and you may start with run_JOR.m.  
+
+2. The code for training JOR is added, start with JOR_training.m. 
+   The trained model will be saved into folder './models', or you
+   can download the trained model from the project page 
+   http://people.ee.ethz.ch/~daid/JOR/ and put them to folder './models'     
+
+3. The code depends on vl-feat library. The library can be downloaded
+   from the website at http://www.vlfeat.org/. For the sake of convenience,
+   we have included vlfeat-0.9.16 into this code package. 
+
+4. The code is built on top of Radu Timofte's code for their work A+. Also, 
+   the code of SRCNN by Chao Dong and colleages are also included for comparison.   
+
+5. Feel free to contact us if you have any questions about using the code. 
+
+
+Dengxin Dai, dai@vision.ee.ethz.ch, ddx2004@gmail.com
+   
+
+
