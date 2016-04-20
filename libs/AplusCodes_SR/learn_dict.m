@@ -46,16 +46,16 @@ features_pca = conf.V_pca' * features;
 numClusters = ceil(size(features,2)/conf.cluster_size);
 
 [centers,index] = vl_kmeans(features_pca, numClusters, 'Algorithm', 'ANN', 'MaxNumComparisons', 1000);
-% [centers,index] = vl_kmeans(features_pca, numClusters, 'Algorithm', 'Lloyd');
-% [centers,index] = vl_kmeans(features_pca, numClusters, 'Algorithm', 'Elkan');
 u_index = unique(index);
 center_num = size(u_index,2);
-
+%%
 MAX = 100000;
 newCenters = zeros(size(centers));
+
 closestPatchC = zeros(1,size(centers,2));
 center_distance = ones(1,size(centers,2));
 center_distance = center_distance * MAX;
+newPatches = zeros(size(patches,1),size(centers,2));
 for i = 1:size(u_index,2)
     c = u_index(1,i);  %find the center corresponded to the patch i
     dis = getDistance(centers(:,c),features_pca(:,i));
@@ -63,6 +63,7 @@ for i = 1:size(u_index,2)
         center_distance(1,c) = dis;
         newCenters(:,c) = features_pca(:,i);
         closestPatchC(1,c) = i;
+        newPatches(:,c) = patches(:,i);
     end
 end
 
@@ -82,10 +83,11 @@ toc;
 % X_lores = dict_lores * gamma
 % X_hires = dict_hires * gamma {hopefully}
 
-% dict_lores = 
-% dict_hires = 
-for i = 1:size(u_index,2)
-end
+
+conf.dict_lores = newCenters(:,u_index);
+conf.dict_hires = newPatches(:,u_index);
+% for i = 1:size(u_index,2)
+% end
 
 fprintf('Computing high-res. dictionary from low-res. dictionary\n');
 % dict_hires = patches / full(gamma); % Takes too much memory...
