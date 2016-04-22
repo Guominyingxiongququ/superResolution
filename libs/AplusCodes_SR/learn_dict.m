@@ -47,7 +47,8 @@ features_pca = conf.V_pca' * features;
 %k means
 numClusters = ceil(size(features,2)/conf.cluster_size);
 
-%% use kmeans
+% use kmeans
+
 if conf.kmeans_window == 1
     [~,index] = vl_kmeans(features_pca, conf.word_num, 'Algorithm', 'ANN', 'MaxNumComparisons', 1000);
     windows_hist = zeros(conf.word_num,numel(hires));
@@ -61,24 +62,22 @@ if conf.kmeans_window == 1
     cluster_num = ceil(numel(hires)/conf.cluster_size);
     [centers, index] = vl_kmeans(windows_hist,cluster_num, 'Algorithm', 'ANN', 'MaxNumComparisons', 1000);
     [update_centers , center_index] = find_closest_centers(centers , index, windows_hist);
-   patches = 
 else
     
 end
 
 if conf.kmeans == 1 
-    [centers,index] = vl_kmeans(features_pca, numClusters, 'Algorithm', 'ANN', 'MaxNumComparisons', 1000);
+    [centers,index] = vl_kmeans(features_pca, numClusters, 'Algorithm', 'ANN', 'Initialization','RANDSEL');
     u_index = unique(index);
-    center_num = size(u_index,2);
     MAX = 100000;
     newCenters = zeros(size(centers));
 
     closestPatchC = zeros(1,size(centers,2));
-    center_distance = ones(1,size(centers,2));
-    center_distance = center_distance * MAX;
+    center_distance = ones(1,size(centers,2))* MAX;
     newPatches = zeros(size(patches,1),size(centers,2));
-    for i = 1:size(u_index,2)
-        c = u_index(1,i);  %find the center corresponded to the patch i
+    
+    for i = 1:size(index,2)
+        c = index(1,i);  %find the center corresponded to the patch i
         dis = getDistance(centers(:,c),features_pca(:,i));
         if dis < center_distance(1,c)
             center_distance(1,c) = dis;
