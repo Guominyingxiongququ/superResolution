@@ -45,47 +45,58 @@ features_pca = conf.V_pca' * features;
 %k means
 numClusters = ceil(size(features,2)/conf.cluster_size);
 
-[centers,index] = vl_kmeans(features_pca, numClusters, 'Algorithm', 'ANN', 'MaxNumComparisons', 1000);
-u_index = unique(index);
-center_num = size(u_index,2);
-%%
-MAX = 100000;
-newCenters = zeros(size(centers));
+%% use kmeans
+if conf.kmeans == 1 
+    [centers,index] = vl_kmeans(features_pca, numClusters, 'Algorithm', 'ANN', 'MaxNumComparisons', 1000);
+    u_index = unique(index);
+    center_num = size(u_index,2);
+    MAX = 100000;
+    newCenters = zeros(size(centers));
 
-closestPatchC = zeros(1,size(centers,2));
-center_distance = ones(1,size(centers,2));
-center_distance = center_distance * MAX;
-newPatches = zeros(size(patches,1),size(centers,2));
-for i = 1:size(u_index,2)
-    c = u_index(1,i);  %find the center corresponded to the patch i
-    dis = getDistance(centers(:,c),features_pca(:,i));
-    if dis < center_distance(1,c)
-        center_distance(1,c) = dis;
-        newCenters(:,c) = features_pca(:,i);
-        closestPatchC(1,c) = i;
-        newPatches(:,c) = patches(:,i);
+    closestPatchC = zeros(1,size(centers,2));
+    center_distance = ones(1,size(centers,2));
+    center_distance = center_distance * MAX;
+    newPatches = zeros(size(patches,1),size(centers,2));
+    for i = 1:size(u_index,2)
+        c = u_index(1,i);  %find the center corresponded to the patch i
+        dis = getDistance(centers(:,c),features_pca(:,i));
+        if dis < center_distance(1,c)
+            center_distance(1,c) = dis;
+            newCenters(:,c) = features_pca(:,i);
+            closestPatchC(1,c) = i;
+            newPatches(:,c) = patches(:,i);
+        end
     end
+else
+    select_num = conf.patch_num;
+    total_num = size(features_pca,2);
+    select_patch_list = sort(randperm(total_num,select_num));
+    
 end
-
 %for each center find the closest patch
 
 % Combine into one large training set
 clear C D V
-ksvd_conf.data = double(features_pca);
+% ksvd_conf.data = double(features_pca);
 % ksvd_conf.data = double(centers);
-clear features_pca
+
 % Training process (will take a while)
 tic;
-fprintf('Training [%d x %d] dictionary on %d vectors using K-SVD\n', ...
-    size(ksvd_conf.data, 1), ksvd_conf.dictsize, size(ksvd_conf.data, 2))
-[conf.dict_lores, gamma] = ksvd(ksvd_conf);
+% fprintf('Training [%d x %d] dictionary on %d vectors using K-SVD\n', ...
+%     size(ksvd_conf.data, 1), ksvd_conf.dictsize, size(ksvd_conf.data, 2))
+% [conf.dict_lores, gamma] = ksvd(ksvd_conf);
 toc;
 % X_lores = dict_lores * gamma
 % X_hires = dict_hires * gamma {hopefully}
 
-
-conf.dict_lores = newCenters(:,u_index);
-conf.dict_hires = newPatches(:,u_index);
+if conf.kmeans == 1
+    conf.dict_lores = newCenters(:,u_index);
+    conf.dict_hires = newPatches(:,u_index);
+else
+    conf.dict_lores = features_pca(:,select_patch_list);
+    conf.dict_hires = patches(:,select_patch_list);
+end
+clear features_pca
 % for i = 1:size(u_index,2)
 % end
 
