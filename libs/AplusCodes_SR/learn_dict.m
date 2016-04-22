@@ -18,7 +18,9 @@ patches = cell(size(hires));
 for i = 1:numel(patches) % Remove low frequencies
     patches{i} = hires{i} - interpolated{i};
 end
-clear hires interpolated
+% clear hires interpolated
+
+
 
 patches = collect(conf, patches, conf.scale, {});
 
@@ -46,6 +48,24 @@ features_pca = conf.V_pca' * features;
 numClusters = ceil(size(features,2)/conf.cluster_size);
 
 %% use kmeans
+if conf.kmeans_window == 1
+    [~,index] = vl_kmeans(features_pca, conf.word_num, 'Algorithm', 'ANN', 'MaxNumComparisons', 1000);
+    windows_hist = zeros(conf.word_num,numel(hires));
+    window_patch_size = size(patches,2)/numel(hires); %record how many patches each window has
+    for i = 1:numel(hires)
+        for j = 1:window_patch_size
+            word = index(1, (i-1)*window_patch_size + j);
+            windows_hist(word,i)=windows_hist(word,i)+1;
+        end
+    end
+    cluster_num = ceil(numel(hires)/conf.cluster_size);
+    [centers, index] = vl_kmeans(windows_hist,cluster_num, 'Algorithm', 'ANN', 'MaxNumComparisons', 1000);
+    [update_centers , center_index] = find_closest_centers(centers , index, windows_hist);
+   patches = 
+else
+    
+end
+
 if conf.kmeans == 1 
     [centers,index] = vl_kmeans(features_pca, numClusters, 'Algorithm', 'ANN', 'MaxNumComparisons', 1000);
     u_index = unique(index);
@@ -71,8 +91,8 @@ else
     select_num = conf.patch_num;
     total_num = size(features_pca,2);
     select_patch_list = sort(randperm(total_num,select_num));
-    
 end
+
 %for each center find the closest patch
 
 % Combine into one large training set
