@@ -108,6 +108,8 @@ for d=10    %1024
             conf.level = 1; % # of scale-ups to perform
             conf.window = [3 3]; % low-res. window size
             conf.border = [1 1]; % border of the image (to ignore)
+            conf.kmeans = 0;
+            conf.patch_num = 11052;
             conf.cluster_size = 5; % the cluster size used for k-means
 
             % High-pass filters for feature extraction (defined for upsampled low-res.)
@@ -490,7 +492,7 @@ for d=10    %1024
 
     % Test performance
     scores = run_comparison(conf);
-    conf.scores = scores
+    conf.scores = scores;
 %     process_scores_Tex(conf, scores,length(conf.filenames));
 %      
 %     run_comparisonRGB(conf); % provides color images and HTML summary
