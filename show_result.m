@@ -1,6 +1,6 @@
 function show_result(conf_set)
     set_num = size(conf_set,2);
-    qmkdir(conf_set{1}.result_dir);
+    qmkdir(conf_set{10}.result_dir);
     fid = fopen(fullfile(conf_set{1}.result_dir, 'index.html'), 'wt');
     fprintf(fid, ...
         '<HTML><HEAD><TITLE>Super-Resolution Summary</TITLE></HEAD><BODY>');

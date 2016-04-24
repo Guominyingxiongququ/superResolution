@@ -16,3 +16,5 @@
 *.bmp
 
 Set5/results_Set5_x3_1024atoms/head_GT[3-NE+LLE].bmp
+
+libs/AplusCodes_SR/learn_dict.m~

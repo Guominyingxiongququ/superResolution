@@ -92,28 +92,33 @@ else
     select_patch_list = sort(randperm(total_num,select_num));
 end
 
+if conf.ksvd == 1 
+    ksvd_conf.data = double(features_pca);
+    tic;
+        fprintf('Training [%d x %d] dictionary on %d vectors using K-SVD\n', ...
+            size(ksvd_conf.data, 1), ksvd_conf.dictsize, size(ksvd_conf.data, 2))
+        [conf.dict_lores, gamma] = ksvd(ksvd_conf);
+    toc;
+end
+
 %for each center find the closest patch
 
 % Combine into one large training set
 clear C D V
-% ksvd_conf.data = double(features_pca);
 % ksvd_conf.data = double(centers);
 
 % Training process (will take a while)
-tic;
-% fprintf('Training [%d x %d] dictionary on %d vectors using K-SVD\n', ...
-%     size(ksvd_conf.data, 1), ksvd_conf.dictsize, size(ksvd_conf.data, 2))
-% [conf.dict_lores, gamma] = ksvd(ksvd_conf);
-toc;
-% X_lores = dict_lores * gamma
-% X_hires = dict_hires * gamma {hopefully}
 
 if conf.kmeans == 1
     conf.dict_lores = newCenters(:,u_index);
     conf.dict_hires = newPatches(:,u_index);
 else
-    conf.dict_lores = features_pca(:,select_patch_list);
-    conf.dict_hires = patches(:,select_patch_list);
+    if conf.ksvd == 1
+        conf.dict_hires = (patches * gamma') * inv(full(gamma * gamma'));
+    else
+        conf.dict_lores = features_pca(:,select_patch_list);
+        conf.dict_hires = patches(:,select_patch_list);
+    end
 end
 clear features_pca
 % for i = 1:size(u_index,2)
@@ -122,7 +127,7 @@ clear features_pca
 fprintf('Computing high-res. dictionary from low-res. dictionary\n');
 % dict_hires = patches / full(gamma); % Takes too much memory...
 % patches = double(patches(:,index)); % Since it is saved in single-precision.
-% dict_hires = (patches * gamma') * inv(full(gamma * gamma'));
+
 
 % conf.dict_hires = double(dict_hires); 
  
