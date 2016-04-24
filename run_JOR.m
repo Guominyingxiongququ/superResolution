@@ -500,6 +500,7 @@ for d=10    %1024
     %    
     save([tag '_' mat_file '_results_imgscale_' num2str(imgscale)],'conf','scores');
     end
+%     select_patches(conf);
     show_result(conf_set);
 end
 %
