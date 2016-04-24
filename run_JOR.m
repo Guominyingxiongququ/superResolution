@@ -88,7 +88,7 @@ for d=10    %1024
     %d=2; %4
     %d=1; %2
     conf_set = cell(1,5);    
-    for s = 1:2 %use 10 dataset           %conf for different set
+    for s = 1:10 %use 10 dataset           %conf for different set
         tag = [input_dir '_x' num2str(upscaling) '_' num2str(dict_sizes(d)) 'atoms'];
 
         disp(['Upscaling x' num2str(upscaling) ' ' input_dir ' with Zeyde dictionary of size = ' num2str(dict_sizes(d))]);
@@ -108,7 +108,8 @@ for d=10    %1024
             conf.level = 1; % # of scale-ups to perform
             conf.window = [3 3]; % low-res. window size
             conf.border = [1 1]; % border of the image (to ignore)
-            conf.kmeans = 0;
+            conf.kmeans = 1;
+            conf.kmeans_window = 0;
             conf.patch_num = 11052;
             conf.cluster_size = 5; % the cluster size used for k-means
 

@@ -9,7 +9,7 @@ function show_result(conf_set)
     fprintf(fid, '<TR>');
     fprintf(fid, '<TD>%s</TD>', ' ');
 %     for i = 1:conf_set{1}.setNum
-    for i = 1:2
+    for i = 1:10
         s1 = num2str(i);
         s2 = 'set_'
         s3 = strcat(s2,s1);
@@ -18,19 +18,19 @@ function show_result(conf_set)
     fprintf(fid, '</TR>\n');
     fprintf(fid, '<TR>');
     fprintf(fid, '<TD>%s</TD>', 'average PSNR');
-    for i = 1:2
+    for i = 1:10
         fprintf(fid, '<TD>%6.2f</TD>', mean(conf_set{i}.scores(:,3)));
     end
     fprintf(fid, '</TR>\n');
     fprintf(fid, '<TR>');
     fprintf(fid, '<TD>%s</TD>', 'COV PSNR');
-    for i = 1:2
+    for i = 1:10
         fprintf(fid, '<TD>%6.2f</TD>', cov(conf_set{i}.scores(:,3)));
     end
     fprintf(fid, '</TR>\n');
     fprintf(fid, '<TR>');
     fprintf(fid, '<TD>%s</TD>', 'patch_num');
-    for i = 1:2
+    for i = 1:10
         fprintf(fid, '<TD>%5d</TD>', conf_set{i}.patch_num);
     end
     fprintf(fid, '</TR>\n');
