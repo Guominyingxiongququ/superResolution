@@ -20,8 +20,6 @@ for i = 1:numel(patches) % Remove low frequencies
 end
 % clear hires interpolated
 
-
-
 patches = collect(conf, patches, conf.scale, {});
 
 % feature size * number of features
@@ -66,9 +64,14 @@ if conf.kmeans_window == 1
     update_feature_size =  update_center_num * window_patch_size;
     update_features = zeros(size(features_pca,1),update_feature_size);
     for i =1:update_center_num
-        update_features(:,i) = features_pca(:,center_index(1,i)*+1)
-        update_patches(:,i) = patches(:,center_index(1,i))
+        offset = window_patch_size;
+        update_begin= (i-1)*window_patch_size+1;
+        begin= (center_index(1,i)-1)*window_patch_size+1;
+        update_features(:,begin:begin+offset-1) = features_pca(:,update_begin:update_begin+offset-1);
+        update_patches(:,begin:begin+offset-1) = patches(:,update_begin:update_begin+offset-1);
     end
+    features_pca = update_features;
+    patches = update_patches;
 end
 
 if conf.kmeans == 1 
@@ -122,7 +125,4 @@ clear features_pca
 
 fprintf('Computing high-res. dictionary from low-res. dictionary\n');
 % patches = double(patches(:,index)); % Since it is saved in single-precision.
-
-
 % conf.dict_hires = double(dict_hires); 
- 

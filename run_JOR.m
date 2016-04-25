@@ -50,7 +50,7 @@ fprintf('\n\n');
 
 %%  super-resolution, note that JOR doesn't use dictionary 
 
-window_num = [500,1000];
+window_num = [125,250,500,1000];
 for w = 1:4 %window num to test 
     d=10    %1024
     conf_set = cell(1,10);    
@@ -70,6 +70,7 @@ for w = 1:4 %window num to test
         conf.kmeans_window = 0;
         conf.ksvd = 1;
         conf.patch_num = 11052;
+        conf.window_num = window_num(1,w);
         conf.cluster_size = 5; % the cluster size used for k-means
 
         % High-pass filters for feature extraction (defined for upsampled low-res.)
@@ -108,7 +109,7 @@ for w = 1:4 %window num to test
         tag = [input_dir '_x' num2str(upscaling) '_' num2str(dict_sizes(d)) 'atoms'];
         conf.desc = {'Original','Bicubic','NE+LLE'};
         conf.results = {};
-        windows = load_images_patches(glob('training_set', pattern_str),conf)%conf for different set
+        windows = load_images_patches(glob('training_set', pattern_str),conf);%conf for different set
         conf = learn_dict(conf, windows(:,1:window_num(w)), dict_sizes(d));
         conf.points = [1:1:size(conf.dict_lores,2)];
         conf.pointslo = conf.dict_lores(:,conf.points);

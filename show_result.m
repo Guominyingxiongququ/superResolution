@@ -47,7 +47,7 @@ function show_result(conf_set)
     
 %     fprintf(fid, '<H1>Simulation parameters</H1>\n<TABLE border="1">\n');
     fprintf(fid, sprintf('<TR><TD>Scaling factor<TD>x%d</TR>\n', conf_set{1}.scale));
-    fprintf(fid, sprintf('<TR><TD>window num<TD>x%d</TR>\n', conf_set{1}.patch_num));
+    fprintf(fid, sprintf('<TR><TD>window num<TD>x%d</TR>\n', conf_set{1}.window_num));
     fprintf(fid, '</TABLE>\n');
     
     fprintf(fid, '%s\n', datestr(now));

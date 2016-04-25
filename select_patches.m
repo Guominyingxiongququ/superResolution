@@ -2,7 +2,6 @@
 %  this function is used to select the patches 
 %  which has the worst performance based on PSNR
 
-
 function patch_list = select_patches(conf)
 
     for j = 2:numel(conf.results{1})
@@ -12,13 +11,18 @@ function patch_list = select_patches(conf)
         for i = 1:numel(conf.results)
             results_truth{i} = conf.results{i}{1};
             results_test{i} = conf.results{i}{j};
+            [img_truth,~,~] = load_images(results_truth);
+            [img_test,~,~] = load_images(results_test);
             
-%             score = calc_performance(conf.results{i}{1}, conf.results{i}{j});
+%             F = im2double(imread(f)); % original
+%             G = im2double(imread(g)); % distorted
+%             E = F - G; % error signal
+%             N = numel(E); % Assume the original signal is at peak (|F|=1)
+%             res = 10*log10( N / sum(E(:).^2) );
 %             scores(i,j) = score;
-%             fprintf(fid, '<TD><A HREF=%s>%.1f</A>(%.2f)</TD>\n', ...
-%                 esc(conf.results{i}{j}), score, conf.countedtime(j-1,i));
-%             fprintf(' : %.1f dB', score)
         end
+        
+        
     end
 
     % how to select patches from a image
