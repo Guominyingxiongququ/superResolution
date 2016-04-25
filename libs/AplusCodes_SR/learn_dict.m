@@ -62,8 +62,13 @@ if conf.kmeans_window == 1
     cluster_num = ceil(numel(hires)/conf.cluster_size);
     [centers, index] = vl_kmeans(windows_hist,cluster_num, 'Algorithm', 'ANN', 'MaxNumComparisons', 1000);
     [update_centers , center_index] = find_closest_centers(centers , index, windows_hist);
-else
-    
+    update_center_num = size(update_centers,2);
+    update_feature_size =  update_center_num * window_patch_size;
+    update_features = zeros(size(features_pca,1),update_feature_size);
+    for i =1:update_center_num
+        update_features(:,i) = features_pca(:,center_index(1,i)*+1)
+        update_patches(:,i) = patches(:,center_index(1,i))
+    end
 end
 
 if conf.kmeans == 1 
@@ -87,45 +92,35 @@ if conf.kmeans == 1
         end
     end
 else
-    select_num = conf.patch_num;
-    total_num = size(features_pca,2);
-    select_patch_list = sort(randperm(total_num,select_num));
-end
-
-if conf.ksvd == 1 
-    ksvd_conf.data = double(features_pca);
-    tic;
+    if conf.ksvd == 1
+        ksvd_conf.data = double(features_pca);
         fprintf('Training [%d x %d] dictionary on %d vectors using K-SVD\n', ...
-            size(ksvd_conf.data, 1), ksvd_conf.dictsize, size(ksvd_conf.data, 2))
+        size(ksvd_conf.data, 1), ksvd_conf.dictsize, size(ksvd_conf.data, 2))
         [conf.dict_lores, gamma] = ksvd(ksvd_conf);
-    toc;
+    else
+        select_num = conf.patch_num;
+        total_num = size(features_pca,2);
+        select_patch_list = sort(randperm(total_num,select_num));
+    end
 end
-
-%for each center find the closest patch
-
-% Combine into one large training set
+ 
 clear C D V
-% ksvd_conf.data = double(centers);
-
-% Training process (will take a while)
 
 if conf.kmeans == 1
     conf.dict_lores = newCenters(:,u_index);
     conf.dict_hires = newPatches(:,u_index);
 else
     if conf.ksvd == 1
-        conf.dict_hires = (patches * gamma') * inv(full(gamma * gamma'));
+        conf.dict_hires = (patches * (full(gamma))') * inv(full(gamma * gamma'));
     else
         conf.dict_lores = features_pca(:,select_patch_list);
         conf.dict_hires = patches(:,select_patch_list);
     end
 end
 clear features_pca
-% for i = 1:size(u_index,2)
-% end
+
 
 fprintf('Computing high-res. dictionary from low-res. dictionary\n');
-% dict_hires = patches / full(gamma); % Takes too much memory...
 % patches = double(patches(:,index)); % Since it is saved in single-precision.
 
 
