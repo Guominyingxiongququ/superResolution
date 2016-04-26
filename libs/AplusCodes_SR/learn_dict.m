@@ -75,7 +75,7 @@ if conf.kmeans_window == 1
 end
 
 if conf.kmeans == 1 
-    [centers,index] = vl_kmeans(features_pca, numClusters, 'Algorithm', 'ANN', 'Initialization','RANDSEL');
+    [centers,index] = vl_kmeans(features_pca, 1000, 'Algorithm', 'ANN', 'Initialization','RANDSEL');
     u_index = unique(index);
     MAX = 100000;
     newCenters = zeros(size(centers));
