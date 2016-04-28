@@ -23,7 +23,6 @@ end
 
 patches = collect(conf, patches, conf.scale, {});
 
-<<<<<<< HEAD
 % feature size * number of features
 % Set KSVD configuration
 %ksvd_conf.iternum = 20; % TBD
@@ -36,8 +35,6 @@ ksvd_conf.samples = size(patches,2);
 
 ksvd_window_conf = ksvd_conf;
 
-=======
->>>>>>> origin/master
 % PCA dimensionality reduction
 C = double(features * features');
 [V, D] = eig(C);
@@ -80,20 +77,20 @@ if conf.kmeans_window == 1
     patches = update_patches;
 end
 
-<<<<<<< HEAD
-
-=======
-%% Set KSVD configuration
-%ksvd_conf.iternum = 20; % TBD
-ksvd_conf.iternum = 20; % TBD
-ksvd_conf.memusage = 'normal'; % higher usage doesn't fit...
-ksvd_conf.dictsize = dictsize; % TBD
-ksvd_conf.Tdata = 3; % maximal sparsity: TBD
-ksvd_conf.samples = size(patches,2);
-conf.ksvd_conf = ksvd_conf;
-
-%%
->>>>>>> origin/master
+% <<<<<<< HEAD
+% 
+% =======
+% %% Set KSVD configuration
+% %ksvd_conf.iternum = 20; % TBD
+% ksvd_conf.iternum = 20; % TBD
+% ksvd_conf.memusage = 'normal'; % higher usage doesn't fit...
+% ksvd_conf.dictsize = dictsize; % TBD
+% ksvd_conf.Tdata = 3; % maximal sparsity: TBD
+% ksvd_conf.samples = size(patches,2);
+% conf.ksvd_conf = ksvd_conf;
+% 
+% %%
+% >>>>>>> origin/master
 if conf.kmeans == 1 
     [centers,index] = vl_kmeans(features_pca, 1000, 'Algorithm', 'ANN', 'Initialization','RANDSEL');
     u_index = unique(index);
