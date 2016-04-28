@@ -4,6 +4,7 @@ function [conf] = learn_dict(conf, hires, dictsize)
 % factor between high-res. and low-res.
 
 % Load training high-res. image set and resample it
+temp_patches = hires;
 hires = modcrop(hires, conf.scale); % crop a bit (to simplify scaling issues)
 % Scale down images
 lores = resize(hires, 1/conf.scale, conf.interpolate_kernel);
@@ -22,6 +23,7 @@ end
 
 patches = collect(conf, patches, conf.scale, {});
 
+<<<<<<< HEAD
 % feature size * number of features
 % Set KSVD configuration
 %ksvd_conf.iternum = 20; % TBD
@@ -34,6 +36,8 @@ ksvd_conf.samples = size(patches,2);
 
 ksvd_window_conf = ksvd_conf;
 
+=======
+>>>>>>> origin/master
 % PCA dimensionality reduction
 C = double(features * features');
 [V, D] = eig(C);
@@ -41,16 +45,16 @@ D = diag(D); % perform PCA on features matrix
 D = cumsum(D) / sum(D);
 k = find(D >= 1e-3, 1); % ignore 0.1% energy
 conf.V_pca = V(:, k:end); % choose the largest eigenvectors' projection
-conf.ksvd_conf = ksvd_conf;
 features_pca = conf.V_pca' * features;
-
+conf.patch_num = 1000;
 %k means
 numClusters = ceil(size(features,2)/conf.cluster_size);
 
 % use kmeans
 
 if conf.kmeans_window == 1
-    [~,index] = vl_kmeans(features_pca, conf.word_num, 'Algorithm', 'ANN', 'MaxNumComparisons', 1000);
+    [centers1,index] = vl_kmeans(features_pca, conf.word_num, 'Algorithm', 'ANN');
+    [update_centers1 , center_index1] = find_closest_centers(centers1 , index, features_pca);  
     windows_hist = zeros(conf.word_num,numel(hires));
     window_patch_size = size(patches,2)/numel(hires); %record how many patches each window has
     for i = 1:numel(hires)
@@ -59,7 +63,7 @@ if conf.kmeans_window == 1
             windows_hist(word,i)=windows_hist(word,i)+1;
         end
     end
-    cluster_num = ceil(numel(hires)/conf.cluster_size);
+    cluster_num = ceil(numel(hires)/4);
     [centers, index] = vl_kmeans(windows_hist,cluster_num, 'Algorithm', 'ANN', 'MaxNumComparisons', 1000);
     [update_centers , center_index] = find_closest_centers(centers , index, windows_hist);
     update_center_num = size(update_centers,2);
@@ -69,14 +73,27 @@ if conf.kmeans_window == 1
         offset = window_patch_size;
         update_begin= (i-1)*window_patch_size+1;
         begin= (center_index(1,i)-1)*window_patch_size+1;
-        update_features(:,begin:begin+offset-1) = features_pca(:,update_begin:update_begin+offset-1);
-        update_patches(:,begin:begin+offset-1) = patches(:,update_begin:update_begin+offset-1);
+        update_features(:,update_begin:update_begin+offset-1) = features_pca(:,begin:begin+offset-1);
+        update_patches(:,update_begin:update_begin+offset-1) = patches(:,begin:begin+offset-1);
     end
     features_pca = update_features;
     patches = update_patches;
 end
 
+<<<<<<< HEAD
 
+=======
+%% Set KSVD configuration
+%ksvd_conf.iternum = 20; % TBD
+ksvd_conf.iternum = 20; % TBD
+ksvd_conf.memusage = 'normal'; % higher usage doesn't fit...
+ksvd_conf.dictsize = dictsize; % TBD
+ksvd_conf.Tdata = 3; % maximal sparsity: TBD
+ksvd_conf.samples = size(patches,2);
+conf.ksvd_conf = ksvd_conf;
+
+%%
+>>>>>>> origin/master
 if conf.kmeans == 1 
     [centers,index] = vl_kmeans(features_pca, 1000, 'Algorithm', 'ANN', 'Initialization','RANDSEL');
     u_index = unique(index);
