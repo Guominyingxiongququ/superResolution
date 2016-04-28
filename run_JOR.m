@@ -16,11 +16,14 @@
 addpath(genpath(pwd));  % the upscaling methods
 addpath('vlfeat-0.9.20/mexmaci64');
 
+figure_num = 1;
 imgscale = 1; % the scale reference we work with
 flag = 1;       % flag = 0 - only bicubic methods, GR, ANR, JOR (Ours here), the other get the bicubic result by default
                 % flag = 1 - all the methods are applied
 upscaling = 3;  % {3, 4}, the magnification factor x3 or x4
-input_dir = 'test_set';  %{Set5, Set14, B100, 'Tex136'}
+% input_dir = 'test_set';  %{Set5, Set14, B100, 'Tex136'}
+    input_dir = 'test_set';  %{Set5, Set14, B100, 'Tex136'}
+
 
 if any(strcmp(input_dir, {'Set5', 'Set14'}))
     pattern = '*.bmp'; % Pattern to process
@@ -49,13 +52,18 @@ end
 fprintf('\n\n');
 
 %%  super-resolution, note that JOR doesn't use dictionary 
-conf.filenames = glob(input_dir, pattern); % Cell array
+test_filenames = glob(input_dir, pattern); % Cell array
 window_num = [125,250,500,1000];
+figure_num = 10;
 for w = 1:4 %window num to test 
     d=10    %1024
     conf_set = cell(1,10);    
     for iter = 1:5
-        conf.file_names = conf.file_names{1+(iter-1)*10:iter*10};
+        filenames = cell(1,10);
+        for file = 1:10
+            filenames{file} = test_filenames{file+(iter-1)*10:iter*10};
+        end
+        conf.filenames = filenames;
         for s = 1 %use 10 dataset   
             s1 = 'img_';
             s2 = num2str(s);
@@ -70,7 +78,7 @@ for w = 1:4 %window num to test
             conf.border = [1 1]; % border of the image (to ignore)
             conf.kmeans = 0;
             conf.kmeans_window = 0;
-            conf.ksvd = 0;
+            conf.ksvd = 1;
             conf.patch_num = 11052;
             conf.window_num = window_num(1,w);
             conf.word_num = 1000; % set word number to 1000
@@ -214,8 +222,16 @@ for w = 1:4 %window num to test
         %    
         save([tag '_' mat_file '_results_imgscale_' num2str(imgscale)],'conf','scores');
         end
+        
+        patch_list = select_patches(conf);
+        conf.window = [3,3];
+        show_patches(patch_list,conf,100,3,figure_num);
+        figure_num = figure_num + 1;
+        conf.window = [99,99];
+        window_list = select_windows(conf);
+        show_patches(window_list,conf,10,1,figure_num);
+        figure_num = figure_num + 1;
     end
-%     select_patches(conf);
     show_result(conf_set);
 end
 %

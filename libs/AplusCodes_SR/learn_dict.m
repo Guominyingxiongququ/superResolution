@@ -32,6 +32,8 @@ ksvd_conf.dictsize = dictsize; % TBD
 ksvd_conf.Tdata = 3; % maximal sparsity: TBD
 ksvd_conf.samples = size(patches,2);
 
+ksvd_window_conf = ksvd_conf;
+
 % PCA dimensionality reduction
 C = double(features * features');
 [V, D] = eig(C);
@@ -73,6 +75,7 @@ if conf.kmeans_window == 1
     features_pca = update_features;
     patches = update_patches;
 end
+
 
 if conf.kmeans == 1 
     [centers,index] = vl_kmeans(features_pca, 1000, 'Algorithm', 'ANN', 'Initialization','RANDSEL');
