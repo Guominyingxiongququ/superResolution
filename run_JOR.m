@@ -129,7 +129,7 @@ for w = 1:4 %window num to test
             conf.result_dirImagesRGB = qmkdir([input_dir '/results_' tag 'RGB']);
             conf.result_dir = qmkdir(['Results-' datestr(now, 'YYYY-mm-dd_HH-MM-SS')]);
             conf.result_dirRGB = qmkdir(['ResultsRGB-' datestr(now, 'YYYY-mm-dd_HH-MM-SS')]);
-
+            conf.entropy = cell(1,5);
             disp(['Upscaling x' num2str(upscaling) ' ' input_dir ' with Zeyde dictionary of size = ' num2str(dict_sizes(d))]);
 
             mat_file = ['conf_Zeyde_' num2str(dict_sizes(d)) '_finalx' num2str(upscaling)];    
@@ -228,9 +228,18 @@ for w = 1:4 %window num to test
         show_patches(patch_list,conf,100,3,figure_num);
         figure_num = figure_num + 1;
         conf.window = [99,99];
-        window_list = select_windows(conf);
-        show_patches(window_list,conf,10,1,figure_num);
-        figure_num = figure_num + 1;
+        entropy = zeros(1,5);
+        PSNR_score = zeros(1,5);
+        for ranking = 1:5 
+            window_list = select_windows(conf,ranking);
+            entropy(ranking) = get_entropy(window_list);
+            PSNR_score(ranking) = get_score(window_list);
+            show_patches(window_list,conf,10,1,figure_num);
+            figure_num = figure_num + 1;
+        end
+        figure(figure_num);
+        plot(entropy,PSNR_score);
+        figure = figure_num + 1;
     end
     show_result(conf_set);
 end
