@@ -4,5 +4,5 @@ function avg_entropy = get_entropy(window_list)
     for i = 1:window_num
         sum_entropy = sum_entropy + entropy(window_list(:,:,i));
     end
-    avg_entropy = avg_entropy/window_num;
+    avg_entropy = sum_entropy/window_num;
 end

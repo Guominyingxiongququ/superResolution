@@ -231,13 +231,13 @@ for w = 1:4 %window num to test
         entropy = zeros(1,5);
         PSNR_score = zeros(1,5);
         for ranking = 1:5 
-            window_list = select_windows(conf,ranking);
+            [window_list,score_list] = select_windows(conf,ranking);
             entropy(ranking) = get_entropy(window_list);
-            PSNR_score(ranking) = get_score(window_list);
+            PSNR_score(ranking) = mean(score_list);
             show_patches(window_list,conf,10,1,figure_num);
             figure_num = figure_num + 1;
         end
-        figure(figure_num);
+        
         plot(entropy,PSNR_score);
         figure = figure_num + 1;
     end
