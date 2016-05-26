@@ -22,7 +22,7 @@ flag = 1;       % flag = 0 - only bicubic methods, GR, ANR, JOR (Ours here), the
                 % flag = 1 - all the methods are applied
 upscaling = 3;  % {3, 4}, the magnification factor x3 or x4
 % input_dir = 'test_set';  %{Set5, Set14, B100, 'Tex136'}
-    input_dir = 'test_set';  %{Set5, Set14, B100, 'Tex136'}
+input_dir = 'Set5';  %{Set5, Set14, B100, 'Tex136'}
 
 
 if any(strcmp(input_dir, {'Set5', 'Set14'}))
@@ -61,10 +61,11 @@ for w = 1:4 %window num to test
     % insert other methods
     conf_set = cell(1,10); 
     %active learning iteration
-    for iter = 1:5
+    for iter = 1
         filenames = cell(1,10);
         for file = 1:10
-            filenames{file} = test_filenames{file+(iter-1)*10:iter*10};
+%             filenames{file} = test_filenames{file+(iter-1)*10:iter*10};
+            filenames{file} = test_filenames;
         end
         conf.filenames = filenames;
         
@@ -96,12 +97,10 @@ for w = 1:4 %window num to test
             L = [1 O -2 O 1]/2; % Laplacian
             conf.filters = {G, G.', L, L.'}; % 2D versions
             conf.interpolate_kernel = 'bicubic';
-
             conf.overlap = [1 1]; % partial overlap (for faster training)
-
             startt = tic;
-
-    %         conf.patch_num = size(winows,2);
+    %  conf.patch_num = size(winows,2);
+            
             conf.overlap = conf.window - [1 1]; % full overlap scheme (for better reconstruction)    
             conf.trainingtime = toc(startt);
             toc(startt)            
@@ -115,6 +114,9 @@ for w = 1:4 %window num to test
                 lambda = 5;
             end
             
+            windows = load_images_windows(glob('training_set', pattern_str),conf);%conf for different set
+            conf = learn_dict(conf, windows(:,1:window_num(w)), dict_sizes(d));
+            
             %% GR
             if dict_sizes(d) < 10000
                 conf.ProjM = inv(conf.dict_lores'*conf.dict_lores+lambda*eye(size(conf.dict_lores,2)))*conf.dict_lores';    
@@ -126,15 +128,12 @@ for w = 1:4 %window num to test
             end
             
             %%config and window
-            conf.filenames = glob(input_dir, pattern); % Cell array
+%             conf.filenames = glob(input_dir, pattern); % Cell array
             conf.desc = {'Original', 'Bicubic', 'Yang et al.', ...
                 'Zeyde et al.', 'GR', 'ANR', ...
-                'NE+LS','NE+NNLS','NE+LLE', 'A+', 'SRCNN', 'JOR'};
+                'NE+LS','NE+NNLS','NE+LLE', 'A+', 'SRCNN' };
             conf.results = {};  
             tag = [input_dir '_x' num2str(upscaling) '_' num2str(dict_sizes(d)) 'atoms'];
-
-            windows = load_images_patches(glob('training_set', pattern_str),conf);%conf for different set
-            conf = learn_dict(conf, windows(:,1:window_num(w)), dict_sizes(d));
             conf.points = [1:1:size(conf.dict_lores,2)];
             conf.pointslo = conf.dict_lores(:,conf.points);
             conf.pointsloPCA = conf.pointslo'*conf.V_pca';
@@ -179,105 +178,103 @@ for w = 1:4 %window num to test
         
             fname = ['Aplus_x' num2str(upscaling) '_' num2str(dict_sizes(d)) 'atoms' num2str(clusterszA) 'nn_5mil.mat'];
     
-            if exist(fname,'file')
-               load(fname);
-            else
-                disp('Compute A+ regressors');
-                ttime = tic;
-                tic
-               [plores phires] = collectSamplesScales(conf, load_images(...            
-                glob('CVPR08-SR/Data/Training', '*.bmp')), 12, 0.98);  
+%             if exist(fname,'file')
+%                load(fname);
+%             else
+            disp('Compute A+ regressors');
+            ttime = tic;
+            tic
+           [plores phires] = collectSamplesScales(conf, windows(:,1:window_num(w)), 12, 0.98);  
 
-                if size(plores,2) > 5000000                
-                    plores = plores(:,1:5000000);
-                    phires = phires(:,1:5000000);
-                end
-                number_samples = size(plores,2);
-        
-                % l2 normalize LR patches, and scale the corresponding HR patches
-                l2 = sum(plores.^2).^0.5+eps;
-                l2n = repmat(l2,size(plores,1),1);    
-                l2(l2<0.1) = 1;
-                plores = plores./l2n;
-                phires = phires./repmat(l2,size(phires,1),1);
-                clear l2
-                clear l2n
+            if size(plores,2) > 5000000                
+                plores = plores(:,1:5000000);
+                phires = phires(:,1:5000000);
+            end
+            number_samples = size(plores,2);
 
-                llambda = 0.1;
+            % l2 normalize LR patches, and scale the corresponding HR patches
+            l2 = sum(plores.^2).^0.5+eps;
+            l2n = repmat(l2,size(plores,1),1);    
+            l2(l2<0.1) = 1;
+            plores = plores./l2n;
+            phires = phires./repmat(l2,size(phires,1),1);
+            clear l2
+            clear l2n
 
-                for i = 1:size(conf.dict_lores,2)
-                    D = pdist2(single(plores'),single(conf.dict_lores(:,i)'));
-                    [~, idx] = sort(D);                
-                    Lo = plores(:, idx(1:clusterszA));                                    
-                    Hi = phires(:, idx(1:clusterszA));
-                    Aplus_PPs{i} = Hi*inv(Lo'*Lo+llambda*eye(size(Lo,2)))*Lo'; 
-                %Aplus_PPs{i} = Hi*(inv(Lo*Lo'+llambda*eye(size(Lo,1)))*Lo)'; 
-                end        
-                clear plores
-                clear phires
-        
-                ttime = toc(ttime);        
-                save(fname,'Aplus_PPs','ttime', 'number_samples');   
-                toc
-            end    
+            llambda = 0.1;
+
+            for i = 1:size(conf.dict_lores,2)
+                D = pdist2(single(plores'),single(conf.dict_lores(:,i)'));
+                [~, idx] = sort(D);                
+                Lo = plores(:, idx(1:clusterszA));                                    
+                Hi = phires(:, idx(1:clusterszA));
+                Aplus_PPs{i} = Hi*inv(Lo'*Lo+llambda*eye(size(Lo,2)))*Lo'; 
+            %Aplus_PPs{i} = Hi*(inv(Lo*Lo'+llambda*eye(size(Lo,1)))*Lo)'; 
+            end        
+            clear plores
+            clear phires
+
+            ttime = toc(ttime);        
+            save(fname,'Aplus_PPs','ttime', 'number_samples');   
+            toc
+%             end    
             
             %% A+ (0.5mil) computing the regressors with 0.5 milion training samples
             Aplus05_PPs = [];    
 
             fname = ['Aplus_x' num2str(upscaling) '_' num2str(dict_sizes(d)) 'atoms' num2str(clusterszA) 'nn_05mil.mat'];    
     
-            if exist(fname,'file')
-               load(fname);
-            else
-               disp('Compute A+ (0.5 mil) regressors');
-               ttime = tic;
-               tic
-               [plores phires] = collectSamplesScales(conf, load_images(...            
-                glob('CVPR08-SR/Data/Training', '*.bmp')), 1,1);  
+%             if exist(fname,'file')
+%                load(fname);
+%             else
+           disp('Compute A+ (0.5 mil) regressors');
+           ttime = tic;
+           tic
+           [plores phires] = collectSamplesScales(conf, windows(:,1:window_num(w)), 1,1);  
 
-                if size(plores,2) > 500000                
-                    plores = plores(:,1:500000);
-                    phires = phires(:,1:500000);
-                end
-                number_samples = size(plores,2);
-        
-                % l2 normalize LR patches, and scale the corresponding HR patches
-                l2 = sum(plores.^2).^0.5+eps;
-                l2n = repmat(l2,size(plores,1),1);      
-                l2(l2<0.1) = 1;
-                plores = plores./l2n;
-                phires = phires./repmat(l2,size(phires,1),1);
-                clear l2
-                clear l2n
+            if size(plores,2) > 500000                
+                plores = plores(:,1:500000);
+                phires = phires(:,1:500000);
+            end
+            number_samples = size(plores,2);
 
-                llambda = 0.1;
+            % l2 normalize LR patches, and scale the corresponding HR patches
+            l2 = sum(plores.^2).^0.5+eps;
+            l2n = repmat(l2,size(plores,1),1);      
+            l2(l2<0.1) = 1;
+            plores = plores./l2n;
+            phires = phires./repmat(l2,size(phires,1),1);
+            clear l2
+            clear l2n
 
-                for i = 1:size(conf.dict_lores,2)
-                    D = pdist2(single(plores'),single(conf.dict_lores(:,i)'));
-                    [~, idx] = sort(D);                
-                    Lo = plores(:, idx(1:clusterszA));                                    
-                    Hi = phires(:, idx(1:clusterszA));
-                    Aplus05_PPs{i} = Hi*inv(Lo'*Lo+llambda*eye(size(Lo,2)))*Lo'; 
-                end        
-                clear plores
-                clear phires
-        
-                ttime = toc(ttime);        
-                save(fname,'Aplus05_PPs','ttime', 'number_samples');   
-                toc
-            end            
+            llambda = 0.1;
+
+            for i = 1:size(conf.dict_lores,2)
+                D = pdist2(single(plores'),single(conf.dict_lores(:,i)'));
+                [~, idx] = sort(D);                
+                Lo = plores(:, idx(1:clusterszA));                                    
+                Hi = phires(:, idx(1:clusterszA));
+                Aplus05_PPs{i} = Hi*inv(Lo'*Lo+llambda*eye(size(Lo,2)))*Lo'; 
+            end        
+            clear plores
+            clear phires
+
+            ttime = toc(ttime);        
+            save(fname,'Aplus05_PPs','ttime', 'number_samples');   
+            toc
+%             end            
     
             %% load the A+ (16 atoms) for comparison results
             conf16 = [];       
             fname = ['Aplus_x' num2str(upscaling) '_16atoms' num2str(clusterszA) 'nn_05mil.mat'];
             fnamec = ['Set14_x' num2str(upscaling) '_16atoms_conf_Zeyde_16_finalx' num2str(upscaling) '_ANR_projections_imgscale_' num2str(imgscale) '.mat']; 
-            if exist(fname,'file') && exist(fnamec,'file')
-               kk = load(fnamec);
-               conf16 = kk.conf;       
-               kk = load(fname);       
-               conf16.PPs = kk.Aplus05_PPs;
-               clear kk
-            end
+%             if exist(fname,'file') && exist(fnamec,'file')
+%                kk = load(fnamec);
+%                conf16 = kk.conf;       
+%                kk = load(fname);       
+%                conf16.PPs = kk.Aplus05_PPs;
+%                clear kk
+%             end
             %%   build result folder 
             conf.result_dirImages = qmkdir([input_dir '/results_' tag]);
             conf.result_dirImagesRGB = qmkdir([input_dir '/results_' tag 'RGB']);
@@ -289,8 +286,9 @@ for w = 1:4 %window num to test
             conf.countedtime = zeros(numel(conf.desc),numel(conf.filenames));
             %% prediction part
             res =[];
-            for i = 1:numel(conf.filenames)
-                f = conf.filenames{i};
+            filenames_list = conf.filenames{1};
+            for i = 1:numel(conf.filenames{1})
+                f = filenames_list{i};
                 [p, n, x] = fileparts(f);
                 [img, imgCB, imgCR] = load_images({f}); 
                 if imgscale<1
@@ -459,7 +457,7 @@ for w = 1:4 %window num to test
 %                     res{2} = interpolated;
 %                 end
                 
-                result = cat(3, img{1}, interpolated{1}, res{2}{1}, res{3}{1}, ...
+                 result = cat(3, img{1}, interpolated{1}, res{2}{1}, res{3}{1}, ...
                     res{4}{1}, res{5}{1}, res{6}{1}, res{7}{1}, res{8}{1}, ...
                     res{9}{1}, res{10}{1});
 
@@ -491,10 +489,6 @@ for w = 1:4 %window num to test
             end   
             conf.duration = cputime - t;
 
-            
-            
-            
-            
                 % Test performance
                 scores = run_comparison(conf);
                 conf.scores = scores;
